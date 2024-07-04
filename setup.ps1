@@ -37,7 +37,7 @@ function Install-Modules([string[]]$modules) {
 .DESCRIPTION
     Ensures environment is correct before starting installation
 
-    Following conditions are ensuresd:
+    Following conditions are ensured:
         1. You have admin privileges
         2. This script is running in PowerShell Core (solves issues automatically)
         3. You can reach github.com
@@ -46,19 +46,6 @@ function Confirm-Environment {
     # Ensures admin privileges are granted
     if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
         throw "This script must be run as admin!"
-    }
-
-    # Ensure script is running in PowerShell Core
-    if ($PSVersionTable.PSEdition -ne "Core") {
-        # Install PowerShell Core if not installed
-        if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
-            Install-WingetPackages Microsoft.PowerShell
-        }
-
-        # Restart the script in PowerShell Core with admin privileges
-        Write-Host "Restarting script in PowerShell Core" -ForegroundColor Green
-        Start-Process pwsh -ArgumentList "-NoExit -NoProfile -ExecutionPolicy RemoteSigned -File `"$PSCommandPath`"" -Verb RunAs
-        return
     }
 
     # Ensures internet connection is present
@@ -72,9 +59,35 @@ function Confirm-Environment {
 
 <#
 .DESCRIPTION
+    Ensures PowerShell Core is installed and opens it to execute the current script
+    if it is not already running in PowerShell Core.
+
+.RETURNS
+    bool
+    Whether the shell was initialized.
+#>
+function Initialize-PowerShellCore {
+    # Ensure script is running in PowerShell Core
+    if ($PSVersionTable.PSEdition -ne "Core") {
+        # Install PowerShell Core if not installed
+        if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
+            Install-WingetPackages Microsoft.PowerShell
+        }
+
+        # Restart the script in PowerShell Core with admin privileges
+        Write-Host "Restarting script in PowerShell Core" -ForegroundColor Green
+        Start-Process pwsh -ArgumentList "-NoExit -NoProfile -ExecutionPolicy RemoteSigned -File `"$PSCommandPath`"" -Verb RunAs
+        return $true
+    }
+
+    return $false
+}
+
+<#
+.DESCRIPTION
     This function updates powershell profile from given GitHub repo url
 
-    Following conditions are ensuresd:
+    Following conditions are ensured:
         1. Existing profile is backed-up
         2. Missing profile directory is created
         3. Profile is downloaded and updated
@@ -134,8 +147,12 @@ function Install-NerdFont([string]$fontName) {
 
 # Application logic ===============================================================================
 Confirm-Environment
-Install-WingetPackages JanDeDobbeleer.OhMyPosh, ajeetdsouza.zoxide, junegunn.fzf
-Install-Modules Terminal-Icons, PSFzf
-Install-NerdFont CascadiaCode
-Update-PowershellProfile "https://github.com/emptycamp/pspf/raw/main"
+$initialized = Initialize-PowerShellCore
+
+if (!($initialized)) {
+    Install-WingetPackages JanDeDobbeleer.OhMyPosh, ajeetdsouza.zoxide, junegunn.fzf
+    Install-Modules Terminal-Icons, PSFzf
+    Install-NerdFont CascadiaCode
+    Update-PowershellProfile "https://github.com/emptycamp/pspf/raw/main"
+}
 # =================================================================================================
