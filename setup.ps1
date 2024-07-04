@@ -5,14 +5,14 @@ $ErrorActionPreference = "Stop"
 # Writes output and exists application
 function Fail([string]$errorMessage) {
     Write-Host $errorMessage -ForegroundColor Red
-    exit 1
+    return
 }
 
 # Installs packages using winget
 function Install-WingetPackages([string[]]$packages) {
     foreach ($package in $packages) {
         try {
-            Write-Host "Installing $package package..."
+            Write-Host "Installing $package package..." -ForegroundColor Cyan
             winget install -e --id $package --accept-source-agreements --accept-package-agreements | Out-Null
             Write-Host "$package package installed successfully." -ForegroundColor Green
         }
@@ -26,7 +26,7 @@ function Install-WingetPackages([string[]]$packages) {
 function Install-Modules([string[]]$modules) {
     foreach ($module in $modules) {
         try {
-            Write-Host "Installing $module module..."
+            Write-Host "Installing $module module..." -ForegroundColor Cyan
             Install-Module -Name $module -Repository PSGallery -Force | Out-Null
             Write-Host "$module module installed successfully." -ForegroundColor Green
         }
@@ -64,7 +64,7 @@ function Confirm-Environment {
         # Restart the script in PowerShell Core with admin privileges
         Write-Host "Restarting script in PowerShell Core" -ForegroundColor Green
         Start-Process pwsh -ArgumentList "-NoExit -NoProfile -ExecutionPolicy RemoteSigned -File `"$PSCommandPath`"" -Verb RunAs
-        exit
+        return
     }
 
     # Ensures internet connection is present
