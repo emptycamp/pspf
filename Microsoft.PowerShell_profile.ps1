@@ -18,13 +18,13 @@ function Update([string]$module) {
         "ps" {
             Update-PowerShell
         }
-        "psp" {
+        "pspf" {
             Update-PowerShellProfile
         }
         default {
             Write-Host "Unknown module specified, please select one of the following:" -ForegroundColor Red
             Write-Host " * ps" -ForegroundColor Red
-            Write-Host " * psp" -ForegroundColor Red
+            Write-Host " * pspf" -ForegroundColor Red
         }
     }
 }
@@ -55,11 +55,15 @@ function Update-PowerShellProfile {
     Write-Host "Updating PowerShell profile..." -ForegroundColor Cyan
 
     $profileName = Split-Path -Leaf $PROFILE
+    $profileDirectory = Split-Path -Parent $PROFILE
+
     $tempProfilePath = "$env:temp/$profileName"
+    $tempThemePath = "$env:temp/theme.yaml"
 
     try {
-        $profileUrl = "https://raw.githubusercontent.com/$PROFILE_REPO/main/$profileName"
-        Invoke-RestMethod $profileUrl -OutFile $tempProfilePath
+        $githubRepoUrl = "https://raw.githubusercontent.com/$PROFILE_REPO/main"
+        Invoke-RestMethod "$githubRepoUrl/$profileName" -OutFile $tempProfilePath
+        Invoke-RestMethod "$githubRepoUrl/theme.yaml" -OutFile $tempThemePath
 
         $oldProfileHash = Get-FileHash $PROFILE
         $newProfilehash = Get-FileHash $tempProfilePath
@@ -67,8 +71,17 @@ function Update-PowerShellProfile {
             Copy-Item -Path $tempProfilePath -Destination $PROFILE -Force
             Write-Host "Profile has been updated, restart your shell to reflect changes." -ForegroundColor Magenta
         }
+
+        $oldThemeHash = Get-FileHash "$profileDirectory/theme.yaml"
+        $newThemeHash = Get-FileHash $tempThemePath
+        if ($oldThemeHash.Hash -ne $newThemeHash.Hash) {
+            Copy-Item -Path $tempThemePath -Destination "$profileDirectory/theme.yaml" -Force
+            Write-Host "Theme has been updated." -ForegroundColor Green
+            . $PROFILE
+        }
     }
     catch {
+        Write-Host "PowerShell is up to date." -ForegroundColor Green
         Write-Error "Failed to update Profile. Error: $_"
     }
     finally {
