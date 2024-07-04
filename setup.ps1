@@ -2,12 +2,6 @@
 $ErrorActionPreference = "Stop"
 
 # Helpers =========================================================================================
-# Writes output and exists application
-function Fail([string]$errorMessage) {
-    Write-Host $errorMessage -ForegroundColor Red
-    return
-}
-
 # Installs packages using winget
 function Install-WingetPackages([string[]]$packages) {
     foreach ($package in $packages) {
@@ -17,7 +11,7 @@ function Install-WingetPackages([string[]]$packages) {
             Write-Host "$package package installed successfully." -ForegroundColor Green
         }
         catch {
-            Fail "Failed to install $package package.`nError: $_"
+            throw "Failed to install $package package.`nError: $_"
         }
     }
 }
@@ -31,7 +25,7 @@ function Install-Modules([string[]]$modules) {
             Write-Host "$module module installed successfully." -ForegroundColor Green
         }
         catch {
-            Fail "Failed to install $module module.`nError: $_"
+            throw "Failed to install $module module.`nError: $_"
         }
     }
 }
@@ -51,7 +45,7 @@ function Install-Modules([string[]]$modules) {
 function Confirm-Environment {
     # Ensures admin privileges are granted
     if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-        Fail "This script must be run as admin!"
+        throw "This script must be run as admin!"
     }
 
     # Ensure script is running in PowerShell Core
@@ -72,7 +66,7 @@ function Confirm-Environment {
         Test-Connection github.com -Count 1 -ErrorAction Stop | Out-Null
     }
     catch {
-        Fail "This script must be run with internet connection!"
+        throw "This script must be run with internet connection!"
     }
 }
 
@@ -110,7 +104,7 @@ function Update-PowershellProfile([string]$githubRepoUrl) {
         Write-Host "Created profile at $PROFILE" -ForegroundColor Green
     }
     catch {
-        Fail "Failed to install PS Profile.`nError: $_"
+        throw "Failed to install PS Profile.`nError: $_"
     }
 }
 
@@ -132,7 +126,7 @@ function Install-NerdFont([string]$fontName) {
         oh-my-posh font install $fontName
     }
     catch {
-        Fail "Failed to install $fontName font.`nError: $_"
+        throw "Failed to install $fontName font.`nError: $_"
     }
 }
 # =================================================================================================
