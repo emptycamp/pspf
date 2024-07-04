@@ -75,8 +75,9 @@ function Initialize-PowerShellCore {
         }
 
         # Restart the script in PowerShell Core with admin privileges
-        Write-Host "Restarting script in PowerShell Core" -ForegroundColor Green
-        Start-Process pwsh -ArgumentList "-NoExit -NoProfile -ExecutionPolicy RemoteSigned -File `"$PSCommandPath`"" -Verb RunAs
+        Write-Host "Restarting script in PowerShell Core" -ForegroundColor Yellow
+        $pwshCommand="irm 'https://github.com/emptycamp/pspf/raw/main/setup.ps1' | iex"
+        Start-Process pwsh -ArgumentList "-NoExit -NoProfile -ExecutionPolicy RemoteSigned -Command $pwshCommand" -Verb RunAs
         return $true
     }
 
