@@ -76,7 +76,7 @@ function Initialize-PowerShellCore {
 
         # Restart the script in PowerShell Core with admin privileges
         Write-Host "Restarting script in PowerShell Core" -ForegroundColor Yellow
-        $pwshCommand="irm 'https://github.com/emptycamp/pspf/raw/main/setup.ps1' | iex"
+        $pwshCommand = "irm 'https://github.com/emptycamp/pspf/raw/main/setup.ps1' | iex"
         Start-Process pwsh -ArgumentList "-NoExit -NoProfile -ExecutionPolicy RemoteSigned -Command $pwshCommand" -Verb RunAs
         return $true
     }
@@ -98,23 +98,20 @@ function Initialize-PowerShellCore {
 #>
 function Update-PowershellProfile([string]$githubRepoUrl) {
     $profileName = Split-Path -Leaf $PROFILE
+    $profileDirectory = Split-Path -Parent $PROFILE
 
     # Backup existing profile
     if (Test-Path -Path $PROFILE -PathType Leaf) {
         Get-Item -Path $PROFILE | Move-Item -Destination "$profileName.backup" -Force
     }
-    else {
-        $profileDirectory = Split-Path -Parent $PROFILE
-
-        # Create profile directory if missing
-        if (!(Test-Path -Path $profileDirectory -PathType Container)) {
-            New-Item -Path $profileDirectory -ItemType Directory
-        }
+    elseif (!(Test-Path -Path $profileDirectory -PathType Container)) {
+        New-Item -Path $profileDirectory -ItemType Directory
     }
 
     # Download and update PS profile
     try {
         Invoke-RestMethod "$githubRepoUrl/$profileName" -OutFile $PROFILE
+        Invoke-RestMethod "$githubRepoUrl/theme.yaml" -OutFile $profileDirectory
         Write-Host "Created profile at $PROFILE" -ForegroundColor Green
     }
     catch {
@@ -155,5 +152,6 @@ if (!($initialized)) {
     Install-Modules Terminal-Icons, PSFzf
     Install-NerdFont CascadiaCode
     Update-PowershellProfile "https://github.com/emptycamp/pspf/raw/main"
+    Write-Host "Setup completed successfully, restart your shell for the changes to take effect." -ForegroundColor Magenta
 }
 # =================================================================================================
