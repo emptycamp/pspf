@@ -71,21 +71,27 @@ function Update-PowerShellProfile {
             Copy-Item -Path $tempProfilePath -Destination $PROFILE -Force
             Write-Host "Profile has been updated, restart your shell to reflect changes." -ForegroundColor Magenta
         }
+        else {
+            Write-Host "PowerShell is up to date." -ForegroundColor Green
+        }
 
         $oldThemeHash = Get-FileHash "$profileDirectory/theme.yaml"
         $newThemeHash = Get-FileHash $tempThemePath
         if ($oldThemeHash.Hash -ne $newThemeHash.Hash) {
             Copy-Item -Path $tempThemePath -Destination "$profileDirectory/theme.yaml" -Force
-            Write-Host "Theme has been updated." -ForegroundColor Green
+            Write-Host "Theme has been updated." -ForegroundColor Magenta
             . $PROFILE
+        }
+        else {
+            Write-Host "Theme is up to date." -ForegroundColor Green
         }
     }
     catch {
-        Write-Host "PowerShell is up to date." -ForegroundColor Green
         Write-Error "Failed to update Profile. Error: $_"
     }
     finally {
         Remove-Item $tempProfilePath -ErrorAction SilentlyContinue
+        Remove-Item $tempThemePath -ErrorAction SilentlyContinue
     }
 }
 # =================================================================================================
@@ -222,6 +228,6 @@ Invoke-Expression (& { (zoxide init --cmd cd powershell | Out-String) })
 Set-PSReadLineOption -PredictionSource History
 Set-PSReadLineOption -PredictionViewStyle InlineView
 
-$REPOS_DIR="C:\repos"
-$PROFILE_REPO="emptycamp/pspf"
+$REPOS_DIR = "C:\repos"
+$PROFILE_REPO = "emptycamp/pspf"
 # =================================================================================================
