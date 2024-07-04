@@ -13,45 +13,7 @@ else { "notepad" }
 
 Set-Alias -Name edit -Value $DEFAULT_EDITOR
 
-function Update([string]$module) {
-    switch ($module) {
-        "ps" {
-            Update-PowerShell
-        }
-        "pspf" {
-            Update-PowerShellProfile
-        }
-        default {
-            Write-Host "Unknown module specified, please select one of the following:" -ForegroundColor Red
-            Write-Host " * ps" -ForegroundColor Red
-            Write-Host " * pspf" -ForegroundColor Red
-        }
-    }
-}
-
-function Update-PowerShell {
-    Write-Host "Checking for PowerShell updates..." -ForegroundColor Cyan
-
-    try {
-        $currentVersion = $PSVersionTable.PSVersion.ToString()
-        $latestReleaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/PowerShell/PowerShell/releases/latest"
-        $latestVersion = $latestReleaseInfo.tag_name.Trim("v")
-
-        if ($currentVersion -lt $latestVersion) {
-            Write-Host "Found newer version $latestVersion, updating PowerShell..." -ForegroundColor Yellow
-            winget upgrade -e --id "Microsoft.PowerShell" --accept-source-agreements --accept-package-agreements
-            Write-Host "PowerShell has been updated, restart your shell to reflect changes." -ForegroundColor Magenta
-        }
-        else {
-            Write-Host "PowerShell is up to date." -ForegroundColor Green
-        }
-    }
-    catch {
-        Write-Error "Failed to update PowerShell. Error: $_"
-    }
-}
-
-function Update-PowerShellProfile {
+function Update-Profile {
     Write-Host "Updating PowerShell profile..." -ForegroundColor Cyan
 
     $profileName = Split-Path -Leaf $PROFILE
@@ -60,31 +22,26 @@ function Update-PowerShellProfile {
     $tempProfilePath = "$env:temp/$profileName"
     $tempThemePath = "$env:temp/theme.yaml"
 
+    function Update-FileToLatest($newFile, $oldFile, $context) {
+        if ((Get-FileHash $newFile).Hash -eq (Get-FileHash $oldFile).Hash) {
+            Write-Host "$context is up to date." -ForegroundColor Green
+        }
+        else {
+            Copy-Item -Path $newFile -Destination $oldFile -Force
+            Write-Host "$context has been updated, restart your shell to reflect changes." -ForegroundColor Magenta
+        }
+    }
+
     try {
         $githubRepoUrl = "https://raw.githubusercontent.com/$PROFILE_REPO/main"
         Invoke-RestMethod "$githubRepoUrl/$profileName" -OutFile $tempProfilePath
         Invoke-RestMethod "$githubRepoUrl/theme.yaml" -OutFile $tempThemePath
 
-        $oldProfileHash = Get-FileHash $PROFILE
-        $newProfilehash = Get-FileHash $tempProfilePath
-        if ($newProfilehash.Hash -ne $oldProfileHash.Hash) {
-            Copy-Item -Path $tempProfilePath -Destination $PROFILE -Force
-            Write-Host "Profile has been updated, restart your shell to reflect changes." -ForegroundColor Magenta
-        }
-        else {
-            Write-Host "PowerShell is up to date." -ForegroundColor Green
-        }
 
-        $oldThemeHash = Get-FileHash "$profileDirectory/theme.yaml"
-        $newThemeHash = Get-FileHash $tempThemePath
-        if ($oldThemeHash.Hash -ne $newThemeHash.Hash) {
-            Copy-Item -Path $tempThemePath -Destination "$profileDirectory/theme.yaml" -Force
-            Write-Host "Theme has been updated." -ForegroundColor Magenta
-            . $PROFILE
-        }
-        else {
-            Write-Host "Theme is up to date." -ForegroundColor Green
-        }
+        Update-FileToLatest $tempProfilePath $PROFILE "Profile"
+        Update-FileToLatest $tempThemePath "$profileDirectory/theme.yaml" "Theme"
+
+        . $PROFILE
     }
     catch {
         Write-Error "Failed to update Profile. Error: $_"
@@ -94,6 +51,8 @@ function Update-PowerShellProfile {
         Remove-Item $tempThemePath -ErrorAction SilentlyContinue
     }
 }
+
+Set-Alias -Name update -Value Update-Profile
 # =================================================================================================
 
 
