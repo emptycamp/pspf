@@ -13,7 +13,7 @@ blocks:
         template: "{{ .Path }}"
         properties:
           style: full
-      - type: git # TODO: validate
+      - type: git
         style: plain
         foreground: p:grey
         background: transparent
