@@ -9,7 +9,6 @@ function Test-CommandExists([string]$command) {
 $DEFAULT_EDITOR = if (Test-CommandExists code) { "code" }
 elseif (Test-CommandExists notepad++) { "notepad++" }
 else { "notepad" }
-
 Set-Alias -Name edit -Value $DEFAULT_EDITOR
 
 function Update-Profile {
@@ -47,10 +46,9 @@ function Update-Profile {
         Remove-Item $tempThemePath -ErrorAction SilentlyContinue
     }
 }
+Set-Alias -Name update -Value Update-Profile
 
 function Version { Write-Host "Profile version: $PROFILE_VERSION" }
-
-Set-Alias -Name update -Value Update-Profile
 # =================================================================================================
 
 
@@ -71,6 +69,7 @@ function uptime {
         ForEach-Object { $_.ToString().Replace("Statistics since ", "") }
     }
 }
+
 function grep($regex, $dir) {
     if ($dir) {
         Get-ChildItem $dir | Select-String $regex
@@ -79,6 +78,7 @@ function grep($regex, $dir) {
         $input | select-string $regex
     }
 }
+
 function which($name) { Get-Command $name | Select-Object -ExpandProperty Definition }
 function pkill($name) { Get-Process $name -ErrorAction SilentlyContinue | Stop-Process }
 function pgrep($name) { Get-Process $name }
@@ -106,8 +106,9 @@ function Edit-Profile([switch]$Main) {
         edit $PROFILE.CurrentUserAllHosts
     }
 }
+
 function Get-PublicIp { (Invoke-WebRequest http://ifconfig.me/ip).Content }
-function Admin {
+function аdmin {
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())
     .IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
@@ -117,16 +118,52 @@ function Admin {
     }
 }
 
-# Navigation
-function desk { Set-Location -Path $HOME\Desktop }
-function down { Set-Location -Path $HOME\Downloads }
+function cmp([string]$pathA, [string]$pathB) {
+    if ($pathA -and !$pathB) {
+        Write-Host "Specify two paths to compare." -ForegroundColor Red
+    }
+
+    if ($pathA -and $pathB) {
+        & "C:\Program Files (x86)\WinMerge\WinMergeU.exe" $pathA $pathB
+    }
+    else {
+        git difftool --tool="winmerge" HEAD -y -d
+    }
+}
+
+function ex([string]$path = ".") { explorer $path }
 
 # Git controls
 function gc([string]$msg) { git commit -m "$msg" }
 Set-Alias -Name gc -Value gc -Force
 
+function gw {
+    $remoteUrl = git remote get-url origin
 
-# Visual studio
+    if (-not $remoteUrl) {
+        Write-Host "Could not retrieve the remote URL of the Git repository" -ForegroundColor Red
+        return
+    }
+
+    if ($remoteUrl -match "^https://([^/]+)/(.*)") {
+        $domain = $matches[1]
+        $path = $matches[2]
+    }
+    elseif ($remoteUrl -match "^git@([^:]+):(.+)") {
+        $domain = $matches[1]
+        $path = $matches[2]
+    }
+    else {
+        Write-Host "The remote URL format is not recognized" -ForegroundColor Red
+        return
+    }
+
+    Start-Process "https://$domain/$path"
+}
+
+# Navigation
+function desk { Set-Location -Path $HOME\Desktop }
+function down { Set-Location -Path $HOME\Downloads }
 function repos {
     if (!(Test-Path -Path $REPOS_DIR -PathType Container)) {
         New-Item -Path $REPOS_DIR -ItemType Directory
@@ -173,19 +210,6 @@ Set-PSReadLineKeyHandler -Chord "Ctrl+y" -ScriptBlock {
     $operationPerformed = Repo -OperationStatus
     if ($operationPerformed) {
         Vs
-    }
-}
-
-function cmp([string]$pathA, [string]$pathB) {
-    if ($pathA -and !$pathB) {
-        Write-Host "Specify two paths to compare." -ForegroundColor Red
-    }
-
-    if ($pathA -and $pathB) {
-        & "C:\Program Files (x86)\WinMerge\WinMergeU.exe" $pathA $pathB
-    }
-    else {
-        git difftool --tool="winmerge" HEAD -y -d
     }
 }
 
