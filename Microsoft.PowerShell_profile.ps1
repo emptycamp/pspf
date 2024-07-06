@@ -26,7 +26,8 @@ function Update-Profile {
         }
         else {
             Copy-Item -Path $newFile -Destination $oldFile -Force
-            Write-Host "$context has been updated, restart your shell to reflect changes." -ForegroundColor Magenta
+            Write-Host "$context has been updated, restart your shell to reflect changes." `
+                -ForegroundColor Magenta
         }
     }
 
@@ -83,11 +84,14 @@ function which($name) { Get-Command $name | Select-Object -ExpandProperty Defini
 function pkill($name) { Get-Process $name -ErrorAction SilentlyContinue | Stop-Process }
 function pgrep($name) { Get-Process $name }
 function head([string]$path, [int]$n) { Get-Content $path -Head $n }
-function tail([string]$path, [int]$n = 10, [switch]$f = $false) { Get-Content $path -Tail $n -Wait:$f }
+function tail([string]$path, [int]$n = 10, [switch]$f = $false) {
+    Get-Content $path -Tail $n -Wait:$f
+}
+
 function ls { Get-ChildItem -Path . -Force | Format-Table -AutoSize }
 
 # Aliases
-Set-Alias -Name su -Value Admin
+Set-Alias -Name su -Value admin
 # =================================================================================================
 
 
@@ -108,13 +112,15 @@ function Edit-Profile([switch]$Main) {
 }
 
 function Get-PublicIp { (Invoke-WebRequest http://ifconfig.me/ip).Content }
-function аdmin {
-    $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())
-    .IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+function admin {
+    $isAdmin = ([Security.Principal.WindowsPrincipal]`
+                [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+                    [Security.Principal.WindowsBuiltInRole]::Administrator)
 
     if (!$isAdmin) {
         $psCommand = if ($PSVersionTable.PSEdition -eq "Core") { "pwsh" } else { "powershell" }
-        Start-Process $psCommand "-NoExit -Command Set-Location -Path '$(Get-Location)'" -Verb RunAs
+        Start-Process $psCommand "-NoExit -Command Set-Location -Path '$(Get-Location)'" `
+            -Verb RunAs
     }
 }
 
@@ -134,10 +140,9 @@ function cmp([string]$pathA, [string]$pathB) {
 function ex([string]$path = ".") { explorer $path }
 
 # Git controls
-function gc([string]$msg) { git commit -m "$msg" }
-Set-Alias -Name gc -Value gc -Force
+function commit([string]$msg) { git commit -m "$msg" }
 
-function gw {
+function web {
     $remoteUrl = git remote get-url origin
 
     if (-not $remoteUrl) {
@@ -159,6 +164,10 @@ function gw {
     }
 
     Start-Process "https://$domain/$path"
+}
+
+function tree {
+    Start-Process "$env:LocalAppData\SourceTree\SourceTree.exe" -ArgumentList "-f $PWD"
 }
 
 # Navigation
