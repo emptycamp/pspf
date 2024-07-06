@@ -148,7 +148,7 @@ Confirm-Environment
 $initialized = Initialize-PowerShellCore
 
 if (!($initialized)) {
-    Install-WingetPackages JanDeDobbeleer.OhMyPosh, ajeetdsouza.zoxide, junegunn.fzf
+    Install-WingetPackages JanDeDobbeleer.OhMyPosh, ajeetdsouza.zoxide, junegunn.fzf, WinMerge.WinMerge
     Install-Modules Terminal-Icons, PSFzf
     Install-NerdFont CascadiaCode
     Update-PowershellProfile "https://github.com/emptycamp/pspf/raw/main"

@@ -1,6 +1,5 @@
 ### PowerShell Profile
-### Version 1.0
-
+$PROFILE_VERSION = "v0.0.1"
 
 # Core functions ==================================================================================
 function Test-CommandExists([string]$command) {
@@ -36,11 +35,8 @@ function Update-Profile {
         $githubRepoUrl = "https://raw.githubusercontent.com/$PROFILE_REPO/main"
         Invoke-RestMethod "$githubRepoUrl/$profileName" -OutFile $tempProfilePath
         Invoke-RestMethod "$githubRepoUrl/theme.yaml" -OutFile $tempThemePath
-
-
         Update-FileToLatest $tempProfilePath $PROFILE "Profile"
         Update-FileToLatest $tempThemePath "$profileDirectory/theme.yaml" "Theme"
-
         . $PROFILE
     }
     catch {
@@ -51,6 +47,8 @@ function Update-Profile {
         Remove-Item $tempThemePath -ErrorAction SilentlyContinue
     }
 }
+
+function Version { Write-Host "Profile version: $PROFILE_VERSION" }
 
 Set-Alias -Name update -Value Update-Profile
 # =================================================================================================
@@ -95,7 +93,19 @@ Set-Alias -Name su -Value Admin
 
 # Custom functions ================================================================================
 # Utils
-function Edit-Profile { edit $PROFILE.CurrentUserAllHosts }
+function Edit-Profile([switch]$Main) {
+    if ($Main) {
+        if (Test-CommandExists code) {
+            code (Split-Path -Parent $PROFILE)
+        }
+        else {
+            edit $PROFILE
+        }
+    }
+    else {
+        edit $PROFILE.CurrentUserAllHosts
+    }
+}
 function Get-PublicIp { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 function Admin {
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())
@@ -125,7 +135,7 @@ function repos {
     Set-Location $REPOS_DIR
 }
 
-function repo {
+function repo([switch]$operationStatus) {
     if (!(Test-Path -Path $REPOS_DIR -PathType Container)) {
         New-Item -Path $REPOS_DIR -ItemType Directory
     }
@@ -135,11 +145,9 @@ function repo {
     if ($selected) {
         Set-Location $selected
         [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-        return $true
+        if ($operationStatus) { return $true }
     }
-    else {
-        return $false
-    }
+    elseif ($operationStatus) { return $false }
 }
 
 function vs {
@@ -162,16 +170,24 @@ Set-PSReadLineKeyHandler -Chord "Ctrl+d" -ScriptBlock {
 }
 
 Set-PSReadLineKeyHandler -Chord "Ctrl+y" -ScriptBlock {
-    $operationPerformed = Repo
+    $operationPerformed = Repo -OperationStatus
     if ($operationPerformed) {
         Vs
     }
 }
 
-# TODO: file compare and excel compare
-# function cmp {
-#     git difftool --tool="winmerge" HEAD -y -d
-# }
+function cmp([string]$pathA, [string]$pathB) {
+    if ($pathA -and !$pathB) {
+        Write-Host "Specify two paths to compare." -ForegroundColor Red
+    }
+
+    if ($pathA -and $pathB) {
+        & "C:\Program Files (x86)\WinMerge\WinMergeU.exe" $pathA $pathB
+    }
+    else {
+        git difftool --tool="winmerge" HEAD -y -d
+    }
+}
 
 # Aliases
 Set-Alias -Name nano -Value "notepad++"
