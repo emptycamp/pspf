@@ -1,5 +1,5 @@
 ### PowerShell Profile
-$PROFILE_VERSION = "v0.0.1"
+$PROFILE_VERSION = "v0.1.0"
 
 # Core functions ==================================================================================
 function Test-CommandExists([string]$command) {
@@ -9,16 +9,23 @@ function Test-CommandExists([string]$command) {
 $DEFAULT_EDITOR = if (Test-CommandExists code) { "code" }
 elseif (Test-CommandExists notepad++) { "notepad++" }
 else { "notepad" }
-Set-Alias -Name edit -Value $DEFAULT_EDITOR
 
-function Update-Profile {
-    Write-Host "Updating PowerShell profile..." -ForegroundColor Cyan
-
+function Update-Profile([string]$version="main") {
     $profileName = Split-Path -Leaf $PROFILE
     $profileDirectory = Split-Path -Parent $PROFILE
 
     $tempProfilePath = "$env:temp/$profileName"
     $tempThemePath = "$env:temp/theme.yaml"
+
+    if ([string]::IsNullOrEmpty($version)) {
+        $version = "main"
+    }
+
+    if ($version[0] -match '\d') {
+        $version = "v$version"
+    }
+
+    Write-Host "Updating PowerShell profile to version $version..." -ForegroundColor Cyan
 
     function Update-FileToLatest($newFile, $oldFile, $context) {
         if ((Get-FileHash $newFile).Hash -eq (Get-FileHash $oldFile).Hash) {
@@ -32,7 +39,7 @@ function Update-Profile {
     }
 
     try {
-        $githubRepoUrl = "https://raw.githubusercontent.com/$PROFILE_REPO/main"
+        $githubRepoUrl = "https://raw.githubusercontent.com/$PROFILE_REPO/$version"
         Invoke-RestMethod "$githubRepoUrl/$profileName" -OutFile $tempProfilePath
         Invoke-RestMethod "$githubRepoUrl/theme.yaml" -OutFile $tempThemePath
         Update-FileToLatest $tempProfilePath $PROFILE "Profile"
@@ -47,9 +54,13 @@ function Update-Profile {
         Remove-Item $tempThemePath -ErrorAction SilentlyContinue
     }
 }
-Set-Alias -Name update -Value Update-Profile
 
-function Version { Write-Host "Profile version: $PROFILE_VERSION" }
+function Get-Version { Write-Host "Profile version: $PROFILE_VERSION" }
+
+# Aliases
+Set-Alias -Name edit -Value $DEFAULT_EDITOR
+Set-Alias -Name update -Value Update-Profile
+Set-Alias -Name version -Value Get-Version
 # =================================================================================================
 
 
@@ -97,8 +108,8 @@ Set-Alias -Name su -Value admin
 
 # Custom functions ================================================================================
 # Utils
-function Edit-Profile([switch]$Main) {
-    if ($Main) {
+function edit-profile([switch]$main) {
+    if ($main) {
         if (Test-CommandExists code) {
             code (Split-Path -Parent $PROFILE)
         }
@@ -111,7 +122,17 @@ function Edit-Profile([switch]$Main) {
     }
 }
 
-function Get-PublicIp { (Invoke-WebRequest http://ifconfig.me/ip).Content }
+function pubip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
+
+function afk {
+    Add-Type -AssemblyName 'System.Windows.Forms'
+
+    while ($true) {
+        [System.Windows.Forms.SendKeys]::SendWait("+")
+        Start-Sleep -Seconds 60
+    }
+}
+
 function admin {
     $isAdmin = ([Security.Principal.WindowsPrincipal]`
                 [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
@@ -197,7 +218,7 @@ function repo([switch]$operationStatus) {
 }
 
 function vs {
-    $slnFiles = Get-ChildItem -Path (Get-Location).Path -Recurse -Filter *.sln
+    $slnFiles = Get-ChildItem -Path (Get-Location).Path -Recurse -Filter *.sln*
 
     if (-not $slnFiles) {
         Write-Host "Solution file not found" -ForegroundColor Red
@@ -207,6 +228,20 @@ function vs {
     }
     else {
         & $slnFiles.FullName
+    }
+}
+
+function prox {
+    $regKey="HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+    $proxyStatus = Get-ItemProperty -Path $regKey -Name ProxyEnable, ProxyServer
+
+    if ($proxyStatus.ProxyEnable -eq 1) {
+        Set-ItemProperty -Path $regKey -Name ProxyEnable -Value 0
+        Write-Host "Proxy disabled." -ForegroundColor Red
+    } else {
+        Set-ItemProperty -Path $regKey -Name ProxyEnable -Value 1
+        Set-ItemProperty -Path $regKey -Name ProxyServer -Value '127.0.0.1:8080'
+        Write-Host "Proxy enabled with 127.0.0.1:8080." -ForegroundColor Green
     }
 }
 
@@ -224,6 +259,7 @@ Set-PSReadLineKeyHandler -Chord "Ctrl+y" -ScriptBlock {
 
 # Aliases
 Set-Alias -Name nano -Value "notepad++"
+Set-Alias -Name mitm -Value "mitmweb"
 # =================================================================================================
 
 
