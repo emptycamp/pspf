@@ -1,5 +1,5 @@
 ### PowerShell Profile
-$PROFILE_VERSION = "v0.1.0"
+$PROFILE_VERSION = "v0.2.0"
 
 # Core functions ==================================================================================
 function Test-CommandExists([string]$command) {
@@ -124,12 +124,19 @@ function edit-profile([switch]$main) {
 
 function pubip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
-function afk {
+function afk([int]$minutes) {
     Add-Type -AssemblyName 'System.Windows.Forms'
+    $endTime = if ($Minutes -gt 0) { (Get-Date).AddMinutes($Minutes) } else { $null }
 
     while ($true) {
-        [System.Windows.Forms.SendKeys]::SendWait("+")
+        [System.Windows.Forms.SendKeys]::SendWait("{NUMLOCK}")
+        Start-Sleep -Milliseconds 200
+        [System.Windows.Forms.SendKeys]::SendWait("{NUMLOCK}")
         Start-Sleep -Seconds 60
+
+        if ($endTime -and (Get-Date) -ge $endTime) {
+            break
+        }
     }
 }
 
