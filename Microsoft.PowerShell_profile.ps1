@@ -1,5 +1,5 @@
 ### PowerShell Profile
-$PROFILE_VERSION = "v0.2.0"
+$PROFILE_VERSION = "v0.3.0"
 
 # Core functions ==================================================================================
 function Test-CommandExists([string]$command) {
@@ -124,9 +124,9 @@ function edit-profile([switch]$main) {
 
 function pubip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
-function afk([int]$minutes) {
+function afk([int]$minutes, [switch]$sleep) {
     Add-Type -AssemblyName 'System.Windows.Forms'
-    $endTime = if ($Minutes -gt 0) { (Get-Date).AddMinutes($Minutes) } else { $null }
+    $endTime = if ($minutes -gt 0) { (Get-Date).AddMinutes($minutes) } else { $null }
 
     while ($true) {
         [System.Windows.Forms.SendKeys]::SendWait("{NUMLOCK}")
@@ -138,6 +138,18 @@ function afk([int]$minutes) {
             break
         }
     }
+
+    if ($endTime -and $sleep) {
+        Add-Type '[DllImport("PowrProf.dll")]public static extern bool SetSuspendState(bool, bool, bool);' `
+            -Name 'SleepHelper' -Namespace 'System' | Out-Null
+        [System.SleepHelper]::SetSuspendState($false, $true, $true)
+    }
+}
+
+function hiber([int]$minutes = 0) {
+    Write-Output "Your computer will hibernate in $m minutes."
+    Start-Sleep -Seconds ($minutes * 60)
+    Stop-Computer -Hibernate
 }
 
 function admin {
