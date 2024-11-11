@@ -125,7 +125,7 @@ function edit-profile([switch]$main) {
 function pubip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 function afk([int]$minutes, [switch]$sleep) {
-    Add-Type -AssemblyName 'System.Windows.Forms'
+    Add-Type -AssemblyName System.Windows.Forms
     $endTime = if ($minutes -gt 0) { (Get-Date).AddMinutes($minutes) } else { $null }
 
     while ($true) {
@@ -140,16 +140,15 @@ function afk([int]$minutes, [switch]$sleep) {
     }
 
     if ($endTime -and $sleep) {
-        Add-Type '[DllImport("PowrProf.dll")]public static extern bool SetSuspendState(bool, bool, bool);' `
-            -Name 'SleepHelper' -Namespace 'System' | Out-Null
-        [System.SleepHelper]::SetSuspendState($false, $true, $true)
+        [System.Windows.Forms.Application]::SetSuspendState([System.Windows.Forms.PowerState]::Suspend, $false, $true);
     }
 }
 
 function hiber([int]$minutes = 0) {
+    Add-Type -AssemblyName System.Windows.Forms
     Write-Output "Your computer will hibernate in $minutes minutes."
     Start-Sleep -Seconds ($minutes * 60)
-    Stop-Computer -Hibernate
+    [System.Windows.Forms.Application]::SetSuspendState([System.Windows.Forms.PowerState]::Hibernate, $false, $true);
 }
 
 function admin {
