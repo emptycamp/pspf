@@ -147,7 +147,7 @@ function afk([int]$minutes, [switch]$sleep) {
 }
 
 function hiber([int]$minutes = 0) {
-    Write-Output "Your computer will hibernate in $m minutes."
+    Write-Output "Your computer will hibernate in $minutes minutes."
     Start-Sleep -Seconds ($minutes * 60)
     Stop-Computer -Hibernate
 }
