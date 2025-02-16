@@ -126,7 +126,19 @@ function pubip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
 
 function afk([int]$minutes, [switch]$sleep) {
     Add-Type -AssemblyName System.Windows.Forms
-    $endTime = if ($minutes -gt 0) { (Get-Date).AddMinutes($minutes) } else { $null }
+    $endTime = $null
+
+    if ($minutes -gt 0) {
+        $endTime = (Get-Date).AddMinutes($minutes)
+
+        if ($sleep) {
+            Write-Output "Your computer will afk for $minutes minutes and then sleep."
+        } else {
+            Write-Output "Your computer will afk for $minutes minutes."
+        }
+    } else {
+        Write-Output "Your computer will afk infinitely."
+    }
 
     while ($true) {
         [System.Windows.Forms.SendKeys]::SendWait("{NUMLOCK}")
@@ -236,7 +248,7 @@ function repo([switch]$operationStatus) {
 }
 
 function vs {
-    $slnFiles = Get-ChildItem -Path (Get-Location).Path -Recurse -Filter *.sln*
+    $slnFiles = Get-ChildItem -Path (Get-Location).Path -Recurse -Include *.sln, *.slnf
 
     if (-not $slnFiles) {
         Write-Host "Solution file not found" -ForegroundColor Red
