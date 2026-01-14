@@ -111,7 +111,6 @@ function Update-PowershellProfile([string]$githubRepoUrl) {
     # Download and update PS profile
     try {
         Invoke-RestMethod "$githubRepoUrl/$profileName" -OutFile $PROFILE
-        Invoke-RestMethod "$githubRepoUrl/theme.yaml" -OutFile $profileDirectory
         Write-Host "Created profile at $PROFILE" -ForegroundColor Green
     }
     catch {
@@ -148,8 +147,8 @@ Confirm-Environment
 $initialized = Initialize-PowerShellCore
 
 if (!($initialized)) {
-    Install-WingetPackages JanDeDobbeleer.OhMyPosh, ajeetdsouza.zoxide, junegunn.fzf
-    Install-Modules Terminal-Icons, PSFzf
+    Install-WingetPackages ajeetdsouza.zoxide, junegunn.fzf
+    Install-Modules PSFzf
     Install-NerdFont CascadiaCode
     Update-PowershellProfile "https://github.com/emptycamp/pspf/raw/main"
     Write-Host "Setup completed successfully, restart your shell for the changes to take effect." -ForegroundColor Magenta

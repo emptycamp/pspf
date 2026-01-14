@@ -1,14 +1,7 @@
 ### PowerShell Profile
-$PROFILE_VERSION = "v0.3.0"
-
-# Core functions ==================================================================================
-function Test-CommandExists([string]$command) {
-    return $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
-}
-
-$DEFAULT_EDITOR = if (Test-CommandExists code) { "code" }
-elseif (Test-CommandExists notepad++) { "notepad++" }
-else { "notepad" }
+$PROFILE_VERSION = "v0.4.0"
+$REPOS_DIR = "C:\repos"
+$PROFILE_REPO = "emptycamp/pspf"
 
 function Update-Profile([string]$version="main") {
     $profileName = Split-Path -Leaf $PROFILE
@@ -58,7 +51,6 @@ function Update-Profile([string]$version="main") {
 function Get-Version { Write-Host "Profile version: $PROFILE_VERSION" }
 
 # Aliases
-Set-Alias -Name edit -Value $DEFAULT_EDITOR
 Set-Alias -Name update -Value Update-Profile
 Set-Alias -Name version -Value Get-Version
 # =================================================================================================
@@ -110,15 +102,10 @@ Set-Alias -Name su -Value admin
 # Utils
 function edit-profile([switch]$main) {
     if ($main) {
-        if (Test-CommandExists code) {
-            code (Split-Path -Parent $PROFILE)
-        }
-        else {
-            edit $PROFILE
-        }
+        code (Split-Path -Parent $PROFILE)
     }
     else {
-        edit $PROFILE.CurrentUserAllHosts
+        code $PROFILE.CurrentUserAllHosts
     }
 }
 
@@ -191,7 +178,6 @@ function cmp([string]$pathA, [string]$pathB) {
 function ex([string]$path = ".") { explorer $path }
 
 # Git controls
-function commit([string]$msg) { git commit -m "$msg" }
 
 function web {
     $remoteUrl = git remote get-url origin
@@ -275,11 +261,6 @@ function prox {
     }
 }
 
-Set-PSReadLineKeyHandler -Chord "Ctrl+d" -ScriptBlock {
-    Get-ChildItem . -Attributes Directory | Invoke-Fzf | ForEach-Object { Set-Location $_ }
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-}
-
 Set-PSReadLineKeyHandler -Chord "Ctrl+y" -ScriptBlock {
     $operationPerformed = Repo -OperationStatus
     if ($operationPerformed) {
@@ -292,16 +273,4 @@ Set-Alias -Name nano -Value "notepad++"
 Set-Alias -Name mitm -Value "mitmweb"
 # =================================================================================================
 
-
-# Setup terminal ==================================================================================
-Import-Module -Name Terminal-Icons
-Set-PsFzfOption -PSReadlineChordProvider "Ctrl+t" -PSReadlineChordReverseHistory "Ctrl+r"
-oh-my-posh init pwsh --config "$(Split-Path -Parent $PROFILE)\theme.yaml" | Invoke-Expression
 Invoke-Expression (& { (zoxide init --cmd cd powershell | Out-String) })
-
-Set-PSReadLineOption -PredictionSource History
-Set-PSReadLineOption -PredictionViewStyle InlineView
-
-$REPOS_DIR = "C:\repos"
-$PROFILE_REPO = "emptycamp/pspf"
-# =================================================================================================
