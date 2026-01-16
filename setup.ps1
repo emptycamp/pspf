@@ -117,28 +117,6 @@ function Update-PowershellProfile([string]$githubRepoUrl) {
         throw "Failed to install PS Profile.`nError: $_"
     }
 }
-
-<#
-.DESCRIPTION
-    Installs specified Nerd Font if missing.
-    https://www.nerdfonts.com/
-.PARAMETER FontName
-    Font names can be found under Assets in the v3.2.1 release.
-    https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.2.1
-#>
-function Install-NerdFont([string]$fontName) {
-    try {
-        if ($null -eq (Get-Command oh-my-posh -ErrorAction SilentlyContinue)) {
-            Write-Host "Temporary adding OhMyPosh to environment path" -ForegroundColor Yellow
-            $env:PATH += ";$HOME\AppData\Local\Programs\oh-my-posh\bin"
-        }
-
-        oh-my-posh font install $fontName
-    }
-    catch {
-        throw "Failed to install $fontName font.`nError: $_"
-    }
-}
 # =================================================================================================
 
 

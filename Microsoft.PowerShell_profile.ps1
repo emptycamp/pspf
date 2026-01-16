@@ -5,10 +5,8 @@ $PROFILE_REPO = "emptycamp/pspf"
 
 function Update-Profile([string]$version="main") {
     $profileName = Split-Path -Leaf $PROFILE
-    $profileDirectory = Split-Path -Parent $PROFILE
 
     $tempProfilePath = "$env:temp/$profileName"
-    $tempThemePath = "$env:temp/theme.yaml"
 
     if ([string]::IsNullOrEmpty($version)) {
         $version = "main"
@@ -34,9 +32,7 @@ function Update-Profile([string]$version="main") {
     try {
         $githubRepoUrl = "https://raw.githubusercontent.com/$PROFILE_REPO/$version"
         Invoke-RestMethod "$githubRepoUrl/$profileName" -OutFile $tempProfilePath
-        Invoke-RestMethod "$githubRepoUrl/theme.yaml" -OutFile $tempThemePath
         Update-FileToLatest $tempProfilePath $PROFILE "Profile"
-        Update-FileToLatest $tempThemePath "$profileDirectory/theme.yaml" "Theme"
         . $PROFILE
     }
     catch {
@@ -44,7 +40,6 @@ function Update-Profile([string]$version="main") {
     }
     finally {
         Remove-Item $tempProfilePath -ErrorAction SilentlyContinue
-        Remove-Item $tempThemePath -ErrorAction SilentlyContinue
     }
 }
 
