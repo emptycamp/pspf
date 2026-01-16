@@ -7,7 +7,7 @@ function Install-WingetPackages([string[]]$packages) {
     foreach ($package in $packages) {
         try {
             Write-Host "Installing $package package..." -ForegroundColor Cyan
-            winget install -e --id $package --accept-source-agreements --accept-package-agreements | Out-Null
+            winget install -e --id $package --accept-source-agreements --accept-package-agreements --source winget | Out-Null
             Write-Host "$package package installed successfully." -ForegroundColor Green
         }
         catch {
