@@ -7,7 +7,7 @@ function Install-WingetPackages([string[]]$packages) {
     foreach ($package in $packages) {
         try {
             Write-Host "Installing $package package..." -ForegroundColor Cyan
-            winget install -e --id $package --accept-source-agreements --accept-package-agreements | Out-Null
+            winget install -e --id $package --accept-source-agreements --accept-package-agreements --source winget | Out-Null
             Write-Host "$package package installed successfully." -ForegroundColor Green
         }
         catch {
@@ -111,33 +111,10 @@ function Update-PowershellProfile([string]$githubRepoUrl) {
     # Download and update PS profile
     try {
         Invoke-RestMethod "$githubRepoUrl/$profileName" -OutFile $PROFILE
-        Invoke-RestMethod "$githubRepoUrl/theme.yaml" -OutFile $profileDirectory
         Write-Host "Created profile at $PROFILE" -ForegroundColor Green
     }
     catch {
         throw "Failed to install PS Profile.`nError: $_"
-    }
-}
-
-<#
-.DESCRIPTION
-    Installs specified Nerd Font if missing.
-    https://www.nerdfonts.com/
-.PARAMETER FontName
-    Font names can be found under Assets in the v3.2.1 release.
-    https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.2.1
-#>
-function Install-NerdFont([string]$fontName) {
-    try {
-        if ($null -eq (Get-Command oh-my-posh -ErrorAction SilentlyContinue)) {
-            Write-Host "Temporary adding OhMyPosh to environment path" -ForegroundColor Yellow
-            $env:PATH += ";$HOME\AppData\Local\Programs\oh-my-posh\bin"
-        }
-
-        oh-my-posh font install $fontName
-    }
-    catch {
-        throw "Failed to install $fontName font.`nError: $_"
     }
 }
 # =================================================================================================
@@ -148,8 +125,8 @@ Confirm-Environment
 $initialized = Initialize-PowerShellCore
 
 if (!($initialized)) {
-    Install-WingetPackages JanDeDobbeleer.OhMyPosh, ajeetdsouza.zoxide, junegunn.fzf
-    Install-Modules Terminal-Icons, PSFzf
+    Install-WingetPackages ajeetdsouza.zoxide, junegunn.fzf
+    Install-Modules PSFzf
     Install-NerdFont CascadiaCode
     Update-PowershellProfile "https://github.com/emptycamp/pspf/raw/main"
     Write-Host "Setup completed successfully, restart your shell for the changes to take effect." -ForegroundColor Magenta
