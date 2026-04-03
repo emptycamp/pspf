@@ -244,8 +244,10 @@ function tree {
 }
 
 # Navigation
-function desk { Set-Location -Path $HOME\Desktop }
-function down { Set-Location -Path $HOME\Downloads }
+function desk { Set-Location -Path ([Environment]::GetFolderPath("Desktop")) }
+function down {
+    Set-Location -Path (New-Object -ComObject Shell.Application).Namespace('shell:Downloads').Self.Path
+}
 function repos {
     if (!(Test-Path -Path $REPOS_DIR -PathType Container)) {
         New-Item -Path $REPOS_DIR -ItemType Directory
