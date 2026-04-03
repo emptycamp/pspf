@@ -1,8 +1,14 @@
 ### PowerShell Profile
-$PROFILE_VERSION = "v0.4.0"
-$PROFILE_USER = "emptycamp"
-$PROFILE_REPO = "$PROFILE_USER/pspf"
-$REPOS_DIR = "C:\repos"
+function _setConst([string]$name, [string]$value) {
+    if (-not (Get-Variable -Name $name -Scope Script -ErrorAction SilentlyContinue)) {
+        Set-Variable -Name $name -Value $value -Option Constant -Scope Script
+    }
+}
+
+_setConst "PROFILE_VERSION" "v0.5.0"
+_setConst "PROFILE_USER" "emptycamp"
+_setConst "PROFILE_REPO" "$PROFILE_USER/pspf"
+_setConst "REPOS_DIR" "C:\repos"
 
 function Update-Profile([string]$version="main") {
     $profileName = Split-Path -Leaf $PROFILE
