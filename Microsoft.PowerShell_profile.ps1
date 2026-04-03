@@ -1,7 +1,8 @@
 ### PowerShell Profile
 $PROFILE_VERSION = "v0.4.0"
+$PROFILE_USER = "emptycamp"
+$PROFILE_REPO = "$PROFILE_USER/pspf"
 $REPOS_DIR = "C:\repos"
-$PROFILE_REPO = "emptycamp/pspf"
 
 function Update-Profile([string]$version="main") {
     $profileName = Split-Path -Leaf $PROFILE
@@ -45,9 +46,52 @@ function Update-Profile([string]$version="main") {
 
 function Get-Version { Write-Host "Profile version: $PROFILE_VERSION" }
 
+function Install-Tool([string]$action, [string]$name) {
+    $registry = @{
+        tt = @{ repo = "tt"; exe = "tt.exe" }
+    }
+
+    if ($action -ne "add" -or !$name) {
+        Write-Host "Usage: tool add <tool_name>" -ForegroundColor Red
+        return
+    }
+
+    $tool = $registry[$name]
+    if (-not $tool) {
+        Write-Host "Unknown tool: $name" -ForegroundColor Red
+        return
+    }
+
+    $toolsDir = Join-Path (Split-Path -Parent $PROFILE) "tools"
+    if (!(Test-Path -Path $toolsDir -PathType Container)) {
+        New-Item -Path $toolsDir -ItemType Directory | Out-Null
+    }
+
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    if (";$userPath;" -notlike "*;$toolsDir;*") {
+        $newUserPath = if ($userPath) { "$userPath;$toolsDir" } else { $toolsDir }
+        [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
+    }
+    if (";$env:Path;" -notlike "*;$toolsDir;*") {
+        $env:Path = "$env:Path;$toolsDir"
+    }
+
+    try {
+        $release = Invoke-RestMethod "https://api.github.com/repos/$PROFILE_USER/$($tool.repo)/releases/latest"
+        $asset = $release.assets | Where-Object { $_.name -eq $tool.exe } | Select-Object -First 1
+        if (-not $asset) { throw "Asset '$($tool.exe)' not found in latest release." }
+        Invoke-WebRequest $asset.browser_download_url -OutFile (Join-Path $toolsDir $tool.exe)
+        Write-Host "$name installed to $toolsDir" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "Failed to install tool '$name'. Error: $_"
+    }
+}
+
 # Aliases
 Set-Alias -Name update -Value Update-Profile
 Set-Alias -Name version -Value Get-Version
+Set-Alias -Name tool -Value Install-Tool
 # =================================================================================================
 
 
@@ -95,13 +139,8 @@ Set-Alias -Name su -Value admin
 
 # Custom functions ================================================================================
 # Utils
-function edit-profile([switch]$main) {
-    if ($main) {
-        code (Split-Path -Parent $PROFILE)
-    }
-    else {
-        code $PROFILE.CurrentUserAllHosts
-    }
+function edit-profile() {
+    code (Split-Path -Parent $PROFILE)
 }
 
 function pubip { (Invoke-WebRequest http://ifconfig.me/ip).Content }
@@ -157,7 +196,7 @@ function admin {
     }
 }
 
-function cmp([string]$pathA, [string]$pathB) {
+function _cmp([string]$pathA, [string]$pathB) {
     if ($pathA -and !$pathB) {
         Write-Host "Specify two paths to compare." -ForegroundColor Red
     }
@@ -171,6 +210,8 @@ function cmp([string]$pathA, [string]$pathB) {
 }
 
 function ex([string]$path = ".") { explorer $path }
+
+
 
 # Git controls
 
