@@ -19,7 +19,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "sed -E -i 's/_setConst \\\"PROFILE_VERSION\\\" \\\"v[0-9]+\\\\.[0-9]+\\\\.[0-9]+\\\"/_setConst \\\"PROFILE_VERSION\\\" \\\"v${nextRelease.version}\\\"/' Microsoft.PowerShell_profile.ps1"
+        "prepareCmd": "sed -E -i 's/_setConst \"PROFILE_VERSION\" \"v[0-9]+\\.[0-9]+\\.[0-9]+\"/_setConst \"PROFILE_VERSION\" \"v${nextRelease.version}\"/' Microsoft.PowerShell_profile.ps1"
       }
     ],
     [
