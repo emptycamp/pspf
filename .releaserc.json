@@ -1,0 +1,36 @@
+{
+  "branches": [
+    "main"
+  ],
+  "tagFormat": "v${version}",
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits"
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "sed -E -i 's/_setConst \\\"PROFILE_VERSION\\\" \\\"v[0-9]+\\\\.[0-9]+\\\\.[0-9]+\\\"/_setConst \\\"PROFILE_VERSION\\\" \\\"v${nextRelease.version}\\\"/' Microsoft.PowerShell_profile.ps1"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "Microsoft.PowerShell_profile.ps1"
+        ],
+        "message": "chore(release): v${nextRelease.version} [skip ci]\\n\\n${nextRelease.notes}"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}
