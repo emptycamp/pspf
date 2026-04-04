@@ -5,7 +5,7 @@ function _setConst([string]$name, [string]$value) {
     }
 }
 
-_setConst "PROFILE_VERSION" "v0.5.2" # DO NOT MODIFY VERSION MANUALLY.
+_setConst "PROFILE_VERSION" "v0.5.3" # DO NOT MODIFY VERSION MANUALLY.
 _setConst "PROFILE_USER" "emptycamp"
 _setConst "PROFILE_REPO" "$PROFILE_USER/pspf"
 _setConst "REPOS_DIR" "C:\repos"
