@@ -127,7 +127,6 @@ $initialized = Initialize-PowerShellCore
 if (!($initialized)) {
     Install-WingetPackages ajeetdsouza.zoxide, junegunn.fzf
     Install-Modules PSFzf
-    Install-NerdFont CascadiaCode
     Update-PowershellProfile "https://github.com/emptycamp/pspf/raw/main"
     Write-Host "Setup completed successfully, restart your shell for the changes to take effect." -ForegroundColor Magenta
 }
