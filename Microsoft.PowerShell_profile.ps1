@@ -233,7 +233,7 @@ function web {
         $domain = $matches[1]
         $path = $matches[2]
     }
-    elseif ($remoteUrl -match "^git@([^:]+):(.+)") {
+    elseif ($remoteUrl -match "^ssh://git@([^:/]+)(?::\d+)?/(.+)") {
         $domain = $matches[1]
         $path = $matches[2]
     }
