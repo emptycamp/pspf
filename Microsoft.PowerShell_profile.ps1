@@ -305,6 +305,19 @@ function prox {
     }
 }
 
+function mute {
+    Import-Module AudioDeviceCmdlets -ErrorAction Stop
+    $devices = @(Get-AudioDevice -List | Where-Object Type -eq "Recording")
+    if (!$devices) {
+        Write-Host "No active input devices found." -ForegroundColor Yellow
+        return
+    }
+
+    $mute = ($devices | Where-Object { -not $_.Device.AudioEndpointVolume.Mute }).Count -gt 0
+    $devices | ForEach-Object { $_.Device.AudioEndpointVolume.Mute = $mute }
+    Write-Host ($(if ($mute) { "Muted" } else { "Unmuted" }))
+}
+
 Set-PSReadLineKeyHandler -Chord "Ctrl+y" -ScriptBlock {
     $operationPerformed = Repo -OperationStatus
     if ($operationPerformed) {
