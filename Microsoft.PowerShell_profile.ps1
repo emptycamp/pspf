@@ -102,6 +102,8 @@ Set-Alias -Name tool -Value Install-Tool
 
 
 # Linux-like functions ============================================================================
+Remove-Alias rm, ls -ErrorAction SilentlyContinue
+
 function touch([string]$name) {
     if (Test-Path $name) { (Get-Item $name).LastWriteTime = Get-Date }
     else { New-Item -ItemType File -Path $name | Out-Null }
