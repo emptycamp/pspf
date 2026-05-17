@@ -164,7 +164,10 @@ function tail([string]$path, [int]$n = 10, [switch]$f = $false) {
     Get-Content $path -Tail $n -Wait:$f
 }
 
-function ls([switch]$a) { Get-ChildItem -Path . -Force:$a | Format-Table -AutoSize }
+function ls([switch]$a, [Parameter(ValueFromRemainingArguments=$true)][string[]]$Path) {
+    if (-not $Path) { $Path = '.' }
+    Get-ChildItem -Path $Path -Force:$a | Format-Table -AutoSize
+}
 
 # Aliases
 Set-Alias -Name su -Value admin
