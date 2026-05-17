@@ -102,6 +102,10 @@ Set-Alias -Name tool -Value Install-Tool
 
 
 # Linux-like functions ============================================================================
+function touch([string]$name) {
+    if (Test-Path $name) { (Get-Item $name).LastWriteTime = Get-Date }
+    else { New-Item -ItemType File -Path $name | Out-Null }
+}
 
 function rm {
     param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Items)
@@ -134,24 +138,31 @@ function uptime {
     }
 }
 
-function grep($regex, $dir) {
-    if ($dir) {
-        Get-ChildItem $dir | Select-String $regex
+function grep {
+    param(
+        [Parameter(Position=0)][string]$Pattern,
+        [Parameter(Position=1, ValueFromRemainingArguments=$true)][string[]]$Path,
+        [switch]$r,
+        [switch]$i
+    )
+    if ($Path) {
+        Get-ChildItem -Path $Path -Recurse:$r -File -ErrorAction SilentlyContinue |
+            Select-String -Pattern $Pattern -CaseSensitive:(-not $i)
     }
     else {
-        $input | select-string $regex
+        $input | Select-String -Pattern $Pattern -CaseSensitive:(-not $i)
     }
 }
 
 function which($name) { Get-Command $name | Select-Object -ExpandProperty Definition }
 function pkill($name) { Get-Process $name -ErrorAction SilentlyContinue | Stop-Process }
-function pgrep($name) { Get-Process $name }
-function head([string]$path, [int]$n) { Get-Content $path -Head $n }
+function pgrep($name) { Get-Process $name -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id }
+function head([string]$path, [int]$n = 10) { Get-Content $path -Head $n }
 function tail([string]$path, [int]$n = 10, [switch]$f = $false) {
     Get-Content $path -Tail $n -Wait:$f
 }
 
-function ls { Get-ChildItem -Path . -Force | Format-Table -AutoSize }
+function ls([switch]$a) { Get-ChildItem -Path . -Force:$a | Format-Table -AutoSize }
 
 # Aliases
 Set-Alias -Name su -Value admin
