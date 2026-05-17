@@ -102,7 +102,22 @@ Set-Alias -Name tool -Value Install-Tool
 
 
 # Linux-like functions ============================================================================
-function touch([string]$name) { New-Item -ItemType "file" -Path . -Name $name }
+
+function rm {
+    param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Items)
+    $recurse = $false; $force = $false; $paths = @()
+    foreach ($a in $Items) {
+        if ($a -match '^-[rRfF]+$') {
+            if ($a -match '[rR]') { $recurse = $true }
+            if ($a -match '[fF]') { $force = $true }
+        }
+        else { $paths += $a }
+    }
+    if ($paths) {
+        $ea = if ($force) { 'SilentlyContinue' } else { 'Continue' }
+        Remove-Item -Path $paths -Recurse:$recurse -Force:$force -ErrorAction $ea
+    }
+}
 function uptime {
     if ($PSVersionTable.PSVersion.Major -eq 5) {
         Get-WmiObject win32_operatingsystem |
