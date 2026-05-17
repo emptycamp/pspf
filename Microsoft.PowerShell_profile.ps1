@@ -337,15 +337,32 @@ function prox {
 }
 
 function mute {
-    Import-Module AudioDeviceCmdlets -ErrorAction Stop
-    $devices = @(Get-AudioDevice -List | Where-Object Type -eq "Recording")
-    if (!$devices) {
-        Write-Host "No active input devices found." -ForegroundColor Yellow
-        return
+    if (-not ('PolicyConfig' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System.Runtime.InteropServices;
+[Guid("f8679f50-850a-41cf-9c72-430f290290c8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IPolicyConfig {
+    void _0(); void _1(); void _2(); void _3(); void _4(); void _5();
+    void _6(); void _7(); void _8(); void _9(); void _10();
+    void SetEndpointVisibility([MarshalAs(UnmanagedType.LPWStr)] string id, int visible);
+}
+[ComImport, Guid("870af99c-171d-4f9e-af0d-e63df40c2bc9")] class CPolicyConfigClient { }
+public static class PolicyConfig {
+    public static void SetVisible(string id, bool visible) =>
+        ((IPolicyConfig)(new CPolicyConfigClient())).SetEndpointVisibility(id, visible ? 1 : 0);
+}
+'@
     }
 
-    $mute = ($devices | Where-Object { -not $_.Device.AudioEndpointVolume.Mute }).Count -gt 0
-    $devices | ForEach-Object { $_.Device.AudioEndpointVolume.Mute = $mute }
+    $root = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture'
+    $devs = Get-ChildItem $root -EA SilentlyContinue | ForEach-Object {
+        [PSCustomObject]@{ Id = "{0.0.1.00000000}.$($_.PSChildName)"; State = Get-ItemPropertyValue $_.PSPath DeviceState }
+    }
+    if (!$devs) { Write-Host "No microphones found." -ForegroundColor Yellow; return }
+
+    $mute = $devs.State -contains 1
+    $targets = if ($mute) { $devs | Where-Object State -eq 1 } else { $devs | Where-Object State -ne 1 }
+    $targets | ForEach-Object { [PolicyConfig]::SetVisible($_.Id, -not $mute) }
     Write-Host ($(if ($mute) { "Muted" } else { "Unmuted" }))
 }
 
