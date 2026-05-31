@@ -55,6 +55,7 @@ function Get-Version { Write-Host "Profile version: $PROFILE_VERSION" }
 function Install-Tool([string]$action, [string]$name) {
     $registry = @{
         tt = @{ repo = "tt"; exe = "tt.exe" }
+        task = @{ repo = "task"; exe = "task.exe" }
     }
 
     if ($action -ne "add" -or !$name) {
