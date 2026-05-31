@@ -378,4 +378,13 @@ Set-Alias -Name nano -Value "notepad++"
 Set-Alias -Name mitm -Value "mitmweb"
 # =================================================================================================
 
-Invoke-Expression (& { (zoxide init --cmd cd powershell | Out-String) })
+# zoxide init spawns a child process — cache its output to avoid ~15s cold-boot delay.
+# Delete .zoxide-init.ps1 to force regeneration (e.g. after upgrading zoxide).
+$zoxideCache = Join-Path (Split-Path -Parent $PROFILE) ".zoxide-init.ps1"
+if (-not (Test-Path $zoxideCache)) {
+    $init = if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+        zoxide init --cmd cd powershell | Out-String
+    } else { "" }
+    Set-Content -LiteralPath $zoxideCache -Value $init -Encoding utf8
+}
+. $zoxideCache
