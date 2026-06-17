@@ -310,7 +310,7 @@ function repo([switch]$operationStatus) {
 }
 
 function vs {
-    $slnFiles = Get-ChildItem -Path (Get-Location).Path -Recurse -Include *.sln, *.slnf
+    $slnFiles = Get-ChildItem -Path (Get-Location).Path -Recurse -Include *.sln, *.slnf, *.slnx
 
     if (-not $slnFiles) {
         Write-Host "Solution file not found" -ForegroundColor Red
