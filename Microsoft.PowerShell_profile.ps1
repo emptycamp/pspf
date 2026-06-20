@@ -56,6 +56,7 @@ function Install-Tool([string]$action, [string]$name) {
     $registry = @{
         tt = @{ repo = "tt"; exe = "tt.exe" }
         ttask = @{ repo = "ttask"; exe = "ttask.exe" }
+        moni = @{ repo = "moni"; exe = "moni.exe" }
     }
 
     if ($action -ne "add" -or !$name) {
